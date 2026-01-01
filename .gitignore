@@ -1,4 +1,88 @@
+# =========================
+# Entornos virtuales
+# =========================
+.venv/
+venv/
+env/
+envnovamind/
+ENV/
+
+# =========================
+# Variables de entorno / secretos
+# =========================
 .env
-envchat/
-envM/
+.env.*
+*.env
+
+# =========================
+# Python cache / compilados
+# =========================
 __pycache__/
+*.py[cod]
+*$py.class
+
+# =========================
+# Packaging / builds
+# =========================
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# =========================
+# Test / coverage
+# =========================
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+.tox/
+.nox/
+
+# =========================
+# Logs y temporales
+# =========================
+*.log
+*.tmp
+*.sqlite3
+*.db
+
+# =========================
+# IDEs / editores
+# =========================
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# =========================
+# Sistema operativo
+# =========================
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# =========================
+# Jupyter / notebooks
+# =========================
+.ipynb_checkpoints/
+
+# =========================
+# FastAPI / Uvicorn / Gunicorn
+# =========================
+*.pid
+uvicorn.log
+gunicorn.log
+
+# =========================
+# Docker (opcional)
+# =========================
+docker-compose.override.yml
+
+# =========================
+# Archivos locales de runtime
+# =========================
+instance/
+.cache/
