@@ -1,12 +1,13 @@
 # ============================================================================
 # RUTA: backend/main.py
-# DESCRIPCIÓN: Aplicación FastAPI Principal
+# DESCRIPCIÓN: Aplicación FastAPI Principal - Con Frontend Integrado
 # USO: python main.py (ejecutar el servidor)
 # ============================================================================
 
 import os
 import logging
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from datetime import datetime
@@ -51,22 +52,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ⭐ SERVIR ARCHIVOS ESTÁTICOS (HTML + imágenes)
+# ESTO DEBE IR ANTES DE INCLUIR LOS ROUTERS
+if os.path.exists("static"):
+    logger.info("✅ Sirviendo archivos estáticos desde carpeta /static")
+    app.mount("/", StaticFiles(directory="static", html=True), name="static")
+else:
+    logger.warning("⚠️ Carpeta /static no encontrada - Las imágenes no se cargarán")
+
 # Incluir rutas
 app.include_router(whatsapp_router)
 app.include_router(lead_router)
 app.include_router(producto_router)
 
 # ===== RUTAS BASE =====
-
-@app.get("/")
-async def root():
-    """Endpoint raíz"""
-    return {
-        "app": "FRESST Chatbot API",
-        "status": "online",
-        "version": "1.0.0",
-        "timestamp": datetime.now().isoformat()
-    }
 
 @app.get("/health")
 async def health_check():
@@ -91,9 +90,12 @@ async def api_info():
 
 @app.on_event("startup")
 async def startup_event():
+    logger.info("=" * 70)
     logger.info("✅ Aplicación iniciada")
     logger.info(f"🤖 Bot: {os.getenv('BOT_NAME', 'Kliofer')}")
     logger.info(f"🏢 Empresa: {os.getenv('COMPANY_NAME', 'FRESST')}")
+    logger.info(f"🌍 Ambiente: {os.getenv('ENVIRONMENT', 'development')}")
+    logger.info("=" * 70)
 
 @app.on_event("shutdown")
 async def shutdown_event():
