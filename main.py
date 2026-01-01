@@ -6,11 +6,12 @@
 
 import os
 import logging
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from datetime import datetime
+from urllib.parse import quote
 
 # Cargar variables de entorno
 load_dotenv()
@@ -60,7 +61,44 @@ if os.path.exists("static"):
 else:
     logger.warning("⚠️ Carpeta /static no encontrada - Las imágenes no se cargarán")
 
-# Incluir rutas
+# ⭐ ENDPOINT DIRECTO - Iniciar Chat
+@app.post("/api/whatsapp/iniciar-chat")
+async def iniciar_chat(request: Request):
+    """Endpoint para iniciar chat desde el frontend"""
+    try:
+        data = await request.json()
+        nombre = data.get("nombre", "Cliente")
+        
+        logger.info(f"📱 Chat iniciado: {nombre}")
+        
+        NUMERO_FRESST = "14155238886"
+        
+        if "Interesado en" in nombre:
+            producto = nombre.replace("Interesado en ", "").strip()
+            mensaje_inicial = f"Hola! Me interesa conocer más sobre {producto} de FRESST"
+        else:
+            mensaje_inicial = "Hola! Me interesa conocer más sobre FRESST"
+        
+        mensaje_encoded = quote(mensaje_inicial)
+        link_whatsapp = f"https://wa.me/{NUMERO_FRESST}?text={mensaje_encoded}"
+        
+        logger.info(f"✅ Link WhatsApp generado")
+        
+        return {
+            "success": True,
+            "link": link_whatsapp,
+            "mensaje_inicial": mensaje_inicial
+        }
+    
+    except Exception as e:
+        logger.error(f"❌ Error en iniciar-chat: {e}", exc_info=True)
+        return {
+            "success": False,
+            "error": str(e),
+            "mensaje": "Error al iniciar chat"
+        }
+
+# Incluir rutas (después del endpoint directo)
 app.include_router(whatsapp_router)
 app.include_router(lead_router)
 app.include_router(producto_router)
@@ -107,7 +145,7 @@ async def shutdown_event():
 if __name__ == "__main__":
     import uvicorn
     
-    port = int(os.getenv("PORT", 8000))
+    port = int(os.getenv("PORT", 10000))
     host = os.getenv("HOST", "0.0.0.0")
     
     logger.info(f"🚀 Iniciando servidor en {host}:{port}")
