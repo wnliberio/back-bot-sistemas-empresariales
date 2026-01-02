@@ -19,11 +19,31 @@ def crear_lead(nombre: str = None, telefono: str = None, email: str = None, dire
         if not telefono:
             return {"success": False, "error": "El teléfono es requerido"}
         
+        # ════════════════════════════════════════════════════════════════
+        # NORMALIZAR TELÉFONO AL GUARDAR
+        # ════════════════════════════════════════════════════════════════
+        
+        telefono_limpio = telefono.replace(" ", "").replace("-", "").replace("(", "").replace(")", "")
+        
+        # Si empieza con 0, convertir a +593
+        if telefono_limpio.startswith("0"):
+            telefono_normalizado = "+593" + telefono_limpio[1:]
+        # Si empieza con 593, agregar +
+        elif telefono_limpio.startswith("593"):
+            telefono_normalizado = "+" + telefono_limpio
+        # Si ya tiene +593, dejar como está
+        elif telefono_limpio.startswith("+593"):
+            telefono_normalizado = telefono_limpio
+        else:
+            telefono_normalizado = telefono_limpio
+        
+        logger.info(f"[LEAD] 📱 Teléfono normalizado: {telefono} → {telefono_normalizado}")
+        
         leads = get_collection("leads")
         
         lead_data = {
             "nombre": nombre,
-            "telefono": telefono,
+            "telefono": telefono_normalizado,  # ← GUARDAR NORMALIZADO
             "email": email,
             "direccion_entrega": direccion,
             "estado_compra": "lead",
@@ -44,15 +64,50 @@ def crear_lead(nombre: str = None, telefono: str = None, email: str = None, dire
         return {"success": False, "error": str(e)}
 
 def obtener_lead_por_telefono(telefono: str) -> dict:
-    """Obtiene un lead por teléfono"""
+    """Obtiene un lead por teléfono - Busca en MÚLTIPLES FORMATOS"""
     try:
-        leads = get_collection("leads")
-        lead = leads.find_one({"telefono": telefono})
+        logger.info(f"[LEAD] 🔍 Buscando: {telefono}")
         
+        leads = get_collection("leads")
+        
+        # BÚSQUEDA 1: Exacta
+        lead = leads.find_one({"telefono": telefono})
         if lead:
             lead["_id"] = str(lead["_id"])
+            logger.info(f"[LEAD] ✅ Encontrado (exacta)")
             return {"success": True, "data": lead}
         
+        # BÚSQUEDA 2: Convertir 0983200438 → +593983200438
+        if telefono.startswith("0"):
+            telefono_alt = "+593" + telefono[1:]
+            logger.info(f"[LEAD] ℹ️  Intentando: {telefono_alt}")
+            lead = leads.find_one({"telefono": telefono_alt})
+            if lead:
+                lead["_id"] = str(lead["_id"])
+                logger.info(f"[LEAD] ✅ Encontrado (con +593)")
+                return {"success": True, "data": lead}
+        
+        # BÚSQUEDA 3: Convertir +593983200438 → 0983200438
+        if telefono.startswith("+593"):
+            telefono_alt = "0" + telefono[4:]
+            logger.info(f"[LEAD] ℹ️  Intentando: {telefono_alt}")
+            lead = leads.find_one({"telefono": telefono_alt})
+            if lead:
+                lead["_id"] = str(lead["_id"])
+                logger.info(f"[LEAD] ✅ Encontrado (con 0)")
+                return {"success": True, "data": lead}
+        
+        # BÚSQUEDA 4: Sin el +
+        telefono_sin_plus = telefono.lstrip("+")
+        if telefono_sin_plus != telefono:
+            logger.info(f"[LEAD] ℹ️  Intentando: {telefono_sin_plus}")
+            lead = leads.find_one({"telefono": telefono_sin_plus})
+            if lead:
+                lead["_id"] = str(lead["_id"])
+                logger.info(f"[LEAD] ✅ Encontrado (sin +)")
+                return {"success": True, "data": lead}
+        
+        logger.warning(f"[LEAD] ❌ No encontrado")
         return {"success": False, "mensaje": "Lead no encontrado"}
     except Exception as e:
         logger.error(f"❌ Error obteniendo lead: {e}")

@@ -22,15 +22,9 @@ else:
 def get_gemini_response(prompt: str) -> str:
     """
     Obtiene respuesta de Gemini API
-    
-    Args:
-        prompt: El mensaje a procesar
-    
-    Returns:
-        Respuesta de Gemini
     """
     try:
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-2.5-flash')
         response = model.generate_content(
             prompt,
             generation_config=genai.types.GenerationConfig(
@@ -40,5 +34,16 @@ def get_gemini_response(prompt: str) -> str:
         )
         return response.text
     except Exception as e:
-        logger.error(f"❌ Error en Gemini API: {e}")
+        error_msg = str(e)
+        logger.error(f"❌ Error en Gemini API: {error_msg}")
+        
+        # ← IMPRIME AQUÍ
+        print(f"\n🔴 ERROR GEMINI: {error_msg}\n")
+        
+        # Verificar si es error de crédito
+        if "resource exhausted" in error_msg.lower() or "quota" in error_msg.lower() or "429" in error_msg:
+            print("⚠️  POSIBLE FALTA DE CRÉDITO O QUOTA EXCEDIDA")
+            return "Lo siento, el servicio no está disponible en este momento. Intenta más tarde."
+        
         return "Lo siento, hubo un error procesando tu pregunta. Intenta de nuevo."
+
