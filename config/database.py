@@ -27,7 +27,7 @@ def connect_mongodb():
             raise ValueError("MONGO_URI no está configurado en .env")
         
         # Conectar con ServerApi como en el ejemplo de la plataforma
-        client = MongoClient(MONGO_URI, server_api=ServerApi('1'))
+        client = MongoClient(MONGO_URI, server_api=ServerApi('1'), tlsInsecure=True)
         
         # Verificar conexión
         client.admin.command('ping')

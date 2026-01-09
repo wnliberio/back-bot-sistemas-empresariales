@@ -31,11 +31,6 @@ except Exception as e:
     logger.error(f"❌ No se pudo conectar a MongoDB: {e}")
     logger.warning("⚠️ La aplicación iniciará pero sin base de datos")
 
-# Importar rutas
-from routes.whatsapp_routes import router as whatsapp_router
-from routes.lead_routes import router as lead_router
-from routes.producto_routes import router as producto_router
-
 # Crear app
 app = FastAPI(
     title="FRESST Chatbot API",
@@ -43,7 +38,17 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CORS
+# ⭐ MIDDLEWARE CORS ADICIONAL
+@app.middleware("https")
+async def add_cors_headers(request, call_next):
+    response = await call_next(request)
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    return response
+
+# ⭐ CORS Middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -51,19 +56,23 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+# Importar rutas
+from routes.whatsapp_routes_v4 import router as whatsapp_router
+from routes.lead_routes import router as lead_router
+from routes.producto_routes import router as producto_router
+
+# Incluir routers
+app.include_router(whatsapp_router)
+app.include_router(lead_router)
+app.include_router(producto_router)
 
 # ⭐ SERVIR ARCHIVOS ESTÁTICOS (HTML + imágenes)
-# ESTO DEBE IR ANTES DE INCLUIR LOS ROUTERS
+# ESTO VA AL FINAL
 if os.path.exists("static"):
     logger.info("✅ Sirviendo archivos estáticos desde carpeta /static")
     app.mount("/", StaticFiles(directory="static", html=True), name="static")
 else:
     logger.warning("⚠️ Carpeta /static no encontrada - Las imágenes no se cargarán")
-
-# Incluir rutas
-app.include_router(whatsapp_router)
-app.include_router(lead_router)
-app.include_router(producto_router)
 
 # ===== RUTAS BASE =====
 

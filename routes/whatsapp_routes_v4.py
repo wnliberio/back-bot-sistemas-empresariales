@@ -9,7 +9,7 @@ import logging
 import json
 from datetime import datetime
 from urllib.parse import quote
-from services.lead_service_v2 import crear_lead, obtener_lead_por_telefono, actualizar_lead
+from services.lead_service import crear_lead, obtener_lead_por_telefono, actualizar_lead
 from services.chat_service_v3 import procesar_mensaje
 from services.sales_flow_v3 import detectar_metodo_pago, detectar_direccion, detectar_producto, obtener_precio_producto
 from services.orden_service_v3 import crear_orden_contraentrega, crear_orden_presencial, guardar_metodo_pago_en_lead
